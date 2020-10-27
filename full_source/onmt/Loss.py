@@ -158,13 +158,13 @@ class LossComputeBase(nn.Module):
         num_correct = pred.eq(target) \
                           .masked_select(non_padding) \
                           .sum()
-        return onmt.Statistics(loss[0], non_padding.sum(), num_correct)
+        return onmt.Statistics(loss.item(), non_padding.sum(), num_correct)
 
     def _bottle(self, v):
-        return v.view(-1, v.size(2))
+        return v.reshape(-1, v.size(2))
 
     def _unbottle(self, v, batch_size):
-        return v.view(-1, batch_size, v.size(1))
+        return v.reshape(-1, batch_size, v.size(1))
 
 
 class NMTLossCompute(LossComputeBase):
@@ -202,7 +202,7 @@ class NMTLossCompute(LossComputeBase):
     def _compute_loss(self, batch, output, target):
         scores = self.generator(self._bottle(output))
 
-        gtruth = target.view(-1)
+        gtruth = target.reshape(-1)
         if self.confidence < 1:
             tdata = gtruth.data
             mask = torch.nonzero(tdata.eq(self.padding_idx)).squeeze()
@@ -221,7 +221,7 @@ class NMTLossCompute(LossComputeBase):
         else:
             loss_data = loss.data.clone()
 
-        stats = self._stats(loss_data, scores.data, target.view(-1).data)
+        stats = self._stats(loss_data, scores.data, target.reshape(-1).data)
         return loss, stats
 
 
